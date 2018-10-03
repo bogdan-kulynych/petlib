@@ -3,6 +3,7 @@
 import os
 import platform
 import cffi
+import sys
 
 try:
     from ._petlib import ffi, lib
@@ -11,6 +12,7 @@ try:
 
 except:
     print("Support not loading the library to build docs without compiling.")
+    sys.exit(1)
     _C = None
     _FFI = None
 
@@ -29,7 +31,12 @@ class Const:
 _inited = False
 
 def version():
-    return str(_FFI.string(_C.SSLeay_version(_C.SSLEAY_VERSION)))
+    if _OPENSSL_VERSION == OpenSSLVersion.V1_0:
+        cstr = _C.SSLeay_version(_C.SSLEAY_VERSION)
+    else:
+        cstr = _C.OpenSSL_version(_C.OPENSSL_VERSION)
+
+    return str(_FFI.string(cstr))
 
 def get_errors():
     errors = []

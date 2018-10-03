@@ -2,6 +2,8 @@ from .bindings import _FFI, _C
 
 import pytest
 
+from ._compat import get_openssl_version, OpenSSLVersion
+_OPENSSL_VERSION = get_openssl_version(_C)
 
 def _check(return_val):
     """Checks the return code of the C calls"""
@@ -62,16 +64,28 @@ class Cipher(object):
 
     def len_IV(self):
         """Return the Initialization Vector length in bytes."""
-        return int(_C.EVP_CIPHER_iv_length(self.alg))
+        if _OPENSSL_VERSION == OpenSSLVersion.V1_0:
+            return int(self.alg.iv_len)
+        else:
+            return int(_C.EVP_CIPHER_iv_length(self.alg))
     def len_key(self):
         """Return the secret key length in bytes."""
-        return int(_C.EVP_CIPHER_key_length(self.alg))
+        if _OPENSSL_VERSION == OpenSSLVersion.V1_0:
+            return int(self.alg.key_len)
+        else:
+            return int(_C.EVP_CIPHER_key_length(self.alg))
     def len_block(self):
         """Return the block size in bytes."""
-        return int(_C.EVP_CIPHER_block_size(self.alg))
+        if _OPENSSL_VERSION == OpenSSLVersion.V1_0:
+            return int(self.alg.block_size)
+        else:
+            return int(_C.EVP_CIPHER_block_size(self.alg))
     def get_nid(self):
         """Return the OpenSSL nid of the cipher and mode."""
-        return int(_C.EVP_CIPHER_nid(self.alg))
+        if _OPENSSL_VERSION == OpenSSLVersion.V1_0:
+            return int(self.alg.nid)
+        else:
+            return int(_C.EVP_CIPHER_nid(self.alg))
 
 
 

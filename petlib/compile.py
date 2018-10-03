@@ -63,11 +63,11 @@ def get_openssl_bindings(filename):
 
 
 openssl_version_code = get_openssl_version(warn=True)  # pylint: disable=undefined-variable
+print(openssl_version_code)
 openssl_bindings_defs = get_openssl_bindings(
         'openssl_v%s.h' % openssl_version_code)
 openssl_bindings_src = get_openssl_bindings(
         'openssl_v%s.c' % openssl_version_code)
-
 
 _FFI = cffi.FFI()
 _FFI.set_source("petlib._petlib", openssl_bindings_src,

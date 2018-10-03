@@ -4,6 +4,9 @@ from binascii import hexlify
 
 import pytest
 
+from ._compat import get_openssl_version, OpenSSLVersion
+_OPENSSL_VERSION = get_openssl_version(_C)
+
 def _check(return_val):
     """Checks the return code of the C calls"""
     if isinstance(return_val, int) and return_val == 1:
@@ -65,8 +68,12 @@ class Hmac(object):
             raise Exception("HMAC Error loading function %s", name)
 
         self.outsize = _C.EVP_MD_size(md)
-        self.mac_ctx = _C.HMAC_CTX_new()
-        # _C.HMAC_CTX_init(self.mac_ctx)
+        if _OPENSSL_VERSION == OpenSSLVersion.V1_0:
+            self.mac_ctx = _FFI.new("HMAC_CTX *")
+            _C.HMAC_CTX_init(self.mac_ctx)
+        else:
+            self.mac_ctx = _C.HMAC_CTX_new()
+
         _check(_C.HMAC_Init_ex(self.mac_ctx, key, len(key), md, _FFI.NULL))
         self.active = True
 
@@ -105,7 +112,7 @@ class Hmac(object):
         return bytes(_FFI.buffer(out_md)[:])
 
     def __del__(self):
-        if self.mac_ctx != None:
+        if self.mac_ctx != None and _OPENSSL_VERSION == OpenSSLVersion.V1_1:
             _C.HMAC_CTX_free(self.mac_ctx)
         
 
